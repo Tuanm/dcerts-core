@@ -14,13 +14,13 @@ struct Cert {
 contract CertPool {
 
     /** @dev Emitted when new certificate is added. */
-    event CertAdded(uint id, string cid);
+    event CertAdded(uint indexed id, string cid);
 
     /** @dev Emitted when a certificate is locked. */
-    event CertLocked(uint id);
+    event CertLocked(uint indexed id);
 
     /** @dev Emitted when a certificate is unlocked. */
-    event CertUnlocked(uint id);
+    event CertUnlocked(uint indexed id);
 
     /** @dev The number of certificates added. */
     uint total = 0;
@@ -58,7 +58,7 @@ contract CertPool {
     function lock(bytes memory _data) public {
         uint id;
         assembly {
-            id := mload(_data)
+            id := mload(add(_data, 0x20))
         }
         require(id < total, "Not found");
         Cert storage cert = certs[id];
@@ -71,7 +71,7 @@ contract CertPool {
     function unlock(bytes memory _data) public {
         uint id;
         assembly {
-            id := mload(_data)
+            id := mload(add(_data, 0x20))
         }
         require(id < total, "Not found");
         Cert storage cert = certs[id];
