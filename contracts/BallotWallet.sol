@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
+/** @dev Represents a vote. */
 struct Ballot {
     address voter;
     uint voteTime;
     bool affirmed;
 }
 
+/** @dev An action need executing. */
 struct Action {
     uint id;
     address contractAddress;
     address starter;
     uint startTime;
-    string functionName;
+    string functionName; // format: <name>(bytes), eg: add(bytes)
     bytes parameters;
 }
 

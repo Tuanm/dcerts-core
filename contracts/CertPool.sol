@@ -59,7 +59,7 @@ contract CertPool {
         }
         require(id < total, "Not found");
         Cert memory cert = certs[id];
-        require(cert.issuer == msg.sender);
+        require(cert.issuer == msg.sender, "No permission");
         cert.locked = true;
         emit CertLocked(id);
     }
@@ -72,7 +72,7 @@ contract CertPool {
         }
         require(id < total, "Not found");
         Cert memory cert = certs[id];
-        require(cert.issuer == msg.sender);
+        require(cert.issuer == msg.sender, "No permission");
         cert.locked = false;
         emit CertUnlocked(id);
     }
