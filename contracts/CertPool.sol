@@ -22,7 +22,10 @@ contract CertPool {
     /** @dev Emitted when a certificate is unlocked. */
     event CertUnlocked(uint id);
 
+    /** @dev The number of certificates added. */
     uint total = 0;
+
+    /** @dev Contains all certificates. */
     mapping(uint => Cert) certs;
 
     /** @dev Returns the certificate with specific identity. */
