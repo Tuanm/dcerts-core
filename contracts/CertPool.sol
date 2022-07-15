@@ -10,11 +10,6 @@ struct Cert {
     string cid;
 }
 
-/** @dev Represents an action. */
-enum Action {
-    ADD, LOCK, UNLOCK
-}
-
 /** @title Contains the certificates. */
 contract CertPool {
 
