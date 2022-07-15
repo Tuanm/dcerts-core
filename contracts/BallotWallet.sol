@@ -93,7 +93,7 @@ contract BallotWallet {
         require(_actionId < total, "Action not found");
         require(voted[_actionId][msg.sender] != true, "Already voted");
         Action memory action = actions[_actionId];
-        require(action.startTime + timeout < block.timestamp, "Action timeout");
+        require(action.startTime + timeout > block.timestamp, "Action timeout");
 
         // Add new ballot
         ballots[_actionId].push(Ballot({
