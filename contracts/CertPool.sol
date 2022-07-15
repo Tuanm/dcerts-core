@@ -61,7 +61,7 @@ contract CertPool {
             id := mload(_data)
         }
         require(id < total, "Not found");
-        Cert memory cert = certs[id];
+        Cert storage cert = certs[id];
         require(cert.issuer == msg.sender, "No permission");
         cert.locked = true;
         emit CertLocked(id);
@@ -74,7 +74,7 @@ contract CertPool {
             id := mload(_data)
         }
         require(id < total, "Not found");
-        Cert memory cert = certs[id];
+        Cert storage cert = certs[id];
         require(cert.issuer == msg.sender, "No permission");
         cert.locked = false;
         emit CertUnlocked(id);
