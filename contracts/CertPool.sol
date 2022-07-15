@@ -39,10 +39,7 @@ contract CertPool {
     /** @dev Adds new certificate. */
     function add(bytes memory _data) public {
         uint id = total;
-        string memory cid;
-        assembly {
-            cid := mload(_data)
-        }
+        string memory cid = string(_data);
         certs[id] = Cert({
             id: id,
             timestamp: block.timestamp,
