@@ -75,7 +75,11 @@ contract BallotWallet {
     event ActionExecuted(uint actionId);
 
     /** @dev Starts a voting to execute an action. */
-    function start(address _contractAddress, string memory _functionName, bytes calldata _parameters) public onlyVoter {
+    function start(
+        address _contractAddress,
+        string memory _functionName,
+        bytes calldata _parameters
+    ) public onlyVoter {
         uint actionId = total;
         actions[actionId] = Action({
             id: actionId,
@@ -87,7 +91,6 @@ contract BallotWallet {
         });
         emit VotingStarted(actionId, msg.sender);
         total = actionId + 1;
-        vote(actionId);
     }
 
     /** @dev Votes to or not to execute a specific action. */
