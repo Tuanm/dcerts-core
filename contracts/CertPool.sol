@@ -37,7 +37,7 @@ contract CertPool {
     }
 
     /** @dev Adds new certificate. */
-    function add(bytes memory _data) public {
+    function add(bytes memory _data) public returns (uint) {
         uint id = total;
         string memory cid = string(_data);
         certs[id] = Cert({
@@ -49,31 +49,34 @@ contract CertPool {
         });
         total = id + 1;
         emit CertAdded(id, cid);
+        return id;
     }
 
     /** @dev Locks a certificate. */
     function lock(bytes memory _data) public {
-        uint id;
-        assembly {
-            id := mload(add(_data, 0x20))
-        }
-        require(id < total, "Not found");
+        uint id = parseId(_data);
         Cert storage cert = certs[id];
         require(cert.issuer == msg.sender, "No permission");
         cert.locked = true;
         emit CertLocked(id);
     }
 
-    /** @dev Unlocks a certificate. */
+    /** @dev Unlocks a locked certificate. */
     function unlock(bytes memory _data) public {
+        uint id = parseId(_data);
+        Cert storage cert = certs[id];
+        require(cert.issuer == msg.sender, "No permission");
+        cert.locked = false;
+        emit CertUnlocked(id);
+    }
+
+    /** @dev Converts bytes data to a certificate identity if it is available. */
+    function parseId(bytes memory _data) internal view returns (uint) {
         uint id;
         assembly {
             id := mload(add(_data, 0x20))
         }
         require(id < total, "Not found");
-        Cert storage cert = certs[id];
-        require(cert.issuer == msg.sender, "No permission");
-        cert.locked = false;
-        emit CertUnlocked(id);
+        return id;
     }
 }
