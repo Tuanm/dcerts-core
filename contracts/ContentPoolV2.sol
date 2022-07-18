@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import "./CertPool.sol";
+import "./ContentPool.sol";
 
-/** @title CertPool but support batches. */
-contract CertPoolV2 is CertPool {
+/** @title ContentPool with batching support. */
+contract ContentPoolV2 is ContentPool {
 
     /** @dev The number of batches added. */
     uint totalBatches = 0;
 
-    /** @dev Contains the batch's certificate identities. */
+    /** @dev Contains the batch's content identities. */
     mapping(uint => uint[]) batches;
 
     /** @dev Emitted when a batch is added. */
@@ -21,20 +21,20 @@ contract CertPoolV2 is CertPool {
     /** @dev Emitted when a batch is unlocked. */
     event BatchUnlocked(uint indexed batchId);
 
-    /** @dev Retrieves a batch of certificates by its identity. */
-    function getBatch(uint _batchId) public view returns (Cert[] memory) {
+    /** @dev Retrieves a batch of contents by its identity. */
+    function getBatch(uint _batchId) public view returns (Content[] memory) {
         require(_batchId < totalBatches, "Not found");
-        uint[] memory certificateIds = batches[_batchId];
-        uint totalCertificates = certificateIds.length;
-        Cert[] memory certificates = new Cert[](totalCertificates);
+        uint[] memory contentIds = batches[_batchId];
+        uint totalContents = contentIds.length;
+        Content[] memory contents = new Content[](totalContents);
         for (uint index = 0; index < 1; index++) {
-            certificates[index] = get(certificateIds[index]);
+            contents[index] = get(contentIds[index]);
         }
-        return certificates;
+        return contents;
     }
 
     /**
-     * @dev Add a batch of certificates.
+     * @dev Add a batch of contents.
      * @param _data contains first 8 bytes to define the length of each CID, the rest for storing CIDs.
      */
     function addBatch(bytes memory _data) public returns (uint) {
@@ -60,7 +60,7 @@ contract CertPoolV2 is CertPool {
             cid[cumulativeLength] = _data[index];
             // When the bytes reach the defined size, pass it into the `add` function
             if (++cumulativeLength == cidLength) {
-                // Retrieve the identity of the certificate added
+                // Retrieve the identity of the content added
                 uint id = add(cid);
                 batches[batchId].push(id);
                 cumulativeLength = 0;
@@ -71,24 +71,24 @@ contract CertPoolV2 is CertPool {
         return batchId;
     }
 
-    /** @dev Locks a batch of certificates. */
+    /** @dev Locks a batch of contents. */
     function lockBatch(bytes memory _data) public {
         uint batchId = parseBatchId(_data);
-        uint[] memory certificateIds = batches[batchId];
-        uint totalCertificates = certificateIds.length;
-        for (uint index = 0; index < totalCertificates; index++) {
-            lock(abi.encodePacked(certificateIds[index]));
+        uint[] memory contentIds = batches[batchId];
+        uint totalContents = contentIds.length;
+        for (uint index = 0; index < totalContents; index++) {
+            lock(abi.encodePacked(contentIds[index]));
         }
         emit BatchLocked(batchId);
     }
 
-    /** @dev Unlocks a locked batch of certificates. */
+    /** @dev Unlocks a locked batch of contents. */
     function unlockBatch(bytes memory _data) public {
         uint batchId = parseBatchId(_data);
-        uint[] memory certificateIds = batches[batchId];
-        uint totalCertificates = certificateIds.length;
-        for (uint index = 0; index < totalCertificates; index++) {
-            unlock(abi.encodePacked(certificateIds[index]));
+        uint[] memory contentIds = batches[batchId];
+        uint totalContents = contentIds.length;
+        for (uint index = 0; index < totalContents; index++) {
+            unlock(abi.encodePacked(contentIds[index]));
         }
         emit BatchUnlocked(batchId);
     }
