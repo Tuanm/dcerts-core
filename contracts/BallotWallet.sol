@@ -77,6 +77,12 @@ contract BallotWallet {
     /** @dev Emitted when an action is executed. */
     event ActionExecuted(uint indexed actionId);
 
+    /** @dev Views a specific action. */
+    function peek(uint _actionId) public view onlyVoter returns (Action memory) {
+        require(_actionId < total, "Action not found");
+        return actions[_actionId];
+    }
+
     /** @dev Starts a voting to execute an action. */
     function start(
         address _contractAddress,
