@@ -16,6 +16,8 @@ struct Action {
     uint startTime;
     string functionName; // format: <name>(bytes), eg: add(bytes)
     bytes parameters;
+    bool executed;
+    bool cancelled;
 }
 
 /** @title A contract for voting-action system. */
@@ -77,6 +79,9 @@ contract BallotWallet {
     /** @dev Emitted when an action is executed. */
     event ActionExecuted(uint indexed actionId);
 
+    /** @dev Emitted when an action is cancelled. */
+    event ActionCancelled(uint indexed actionId);
+
     /** @dev Views a specific action. */
     function peek(uint _actionId) public view onlyVoter returns (Action memory) {
         require(_actionId < total, "Action not found");
@@ -96,7 +101,9 @@ contract BallotWallet {
             starter: msg.sender,
             startTime: block.timestamp,
             functionName: _functionName,
-            parameters: _parameters
+            parameters: _parameters,
+            executed: false,
+            cancelled: false
         });
         emit VotingStarted(actionId, msg.sender);
         total = actionId + 1;
@@ -106,7 +113,9 @@ contract BallotWallet {
     function vote(uint _actionId) public onlyVoter returns (bool, bytes memory) {
         require(_actionId < total, "Action not found");
         require(voted[_actionId][msg.sender] != true, "Already voted");
-        Action memory action = actions[_actionId];
+        Action storage action = actions[_actionId];
+        require(action.executed == false, "Action executed");
+        require(action.cancelled == false, "Action cancelled");
         require(action.startTime + timeout > block.timestamp, "Action timeout");
 
         // Add new ballot
@@ -120,15 +129,11 @@ contract BallotWallet {
         emit Voted(_actionId, msg.sender);
 
         // Try execute the action
-        (bool success, bytes memory result) = execute(action);
-        if (success == true) {
-            emit ActionExecuted(_actionId);
-        }
-        return (success, result);
+        return execute(action);
     }
 
     /** @dev Executes a specific action if it has enough voters. */
-    function execute(Action memory _action) private returns (bool, bytes memory) {
+    function execute(Action storage _action) private returns (bool, bytes memory) {
         // Count the number of voters that have affirmed the action
         Ballot[] memory currentBallots = ballots[_action.id];
         uint totalBallots = currentBallots.length;
@@ -141,9 +146,17 @@ contract BallotWallet {
 
         // Only execute the action if there are enough affirmations
         if (totalAffirmations >= threshold) {
-            return _action.contractAddress.call(
+            (bool success, bytes memory result) = _action.contractAddress.call(
                 abi.encodeWithSignature(_action.functionName, _action.parameters)
             );
+            if (success) {
+                _action.executed = true;
+                emit ActionExecuted(_action.id);
+                return (success, result);
+            }
+        } else if (totalBallots - totalAffirmations >= threshold) {
+            _action.cancelled = true;
+            emit ActionCancelled(_action.id);
         }
         return (false, "");
     }

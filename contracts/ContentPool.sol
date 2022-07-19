@@ -14,13 +14,13 @@ struct Content {
 contract ContentPool {
 
     /** @dev Emitted when new content is added. */
-    event ContentAdded(address indexed author, uint id, string cid);
+    event ContentAdded(address indexed author, uint indexed id, string indexed cid);
 
     /** @dev Emitted when a content is locked. */
-    event ContentLocked(address indexed author, uint id);
+    event ContentLocked(address indexed author, uint indexed id);
 
     /** @dev Emitted when a content is unlocked. */
-    event ContentUnlocked(address indexed author, uint id);
+    event ContentUnlocked(address indexed author, uint indexed id);
 
     /** @dev The number of contents added. */
     uint total = 0;

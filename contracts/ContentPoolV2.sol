@@ -13,13 +13,13 @@ contract ContentPoolV2 is ContentPool {
     mapping(uint => uint[]) batches;
 
     /** @dev Emitted when a batch is added. */
-    event BatchAdded(address indexed author, uint batchId);
+    event BatchAdded(address indexed author, uint indexed batchId, uint[] indexed contentIds);
 
     /** @dev Emitted when a batch is locked. */
-    event BatchLocked(address indexed author, uint batchId);
+    event BatchLocked(address indexed author, uint indexed batchId);
 
     /** @dev Emitted when a batch is unlocked. */
-    event BatchUnlocked(address indexed author, uint batchId);
+    event BatchUnlocked(address indexed author, uint indexed batchId);
 
     /** @dev Retrieves a batch of contents by its identity. */
     function getBatch(uint _batchId) public view returns (Content[] memory) {
@@ -67,7 +67,7 @@ contract ContentPoolV2 is ContentPool {
             }
         }
         totalBatches = batchId + 1;
-        emit BatchAdded(msg.sender, batchId);
+        emit BatchAdded(msg.sender, batchId, batches[batchId]);
         return batchId;
     }
 
