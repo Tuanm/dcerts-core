@@ -13,13 +13,13 @@ contract ContentPoolV2 is ContentPool {
     mapping(uint => uint[]) batches;
 
     /** @dev Emitted when a batch is added. */
-    event BatchAdded(uint indexed batchId);
+    event BatchAdded(address indexed author, uint batchId);
 
     /** @dev Emitted when a batch is locked. */
-    event BatchLocked(uint indexed batchId);
+    event BatchLocked(address indexed author, uint batchId);
 
     /** @dev Emitted when a batch is unlocked. */
-    event BatchUnlocked(uint indexed batchId);
+    event BatchUnlocked(address indexed author, uint batchId);
 
     /** @dev Retrieves a batch of contents by its identity. */
     function getBatch(uint _batchId) public view returns (Content[] memory) {
@@ -67,7 +67,7 @@ contract ContentPoolV2 is ContentPool {
             }
         }
         totalBatches = batchId + 1;
-        emit BatchAdded(batchId);
+        emit BatchAdded(msg.sender, batchId);
         return batchId;
     }
 
@@ -79,7 +79,7 @@ contract ContentPoolV2 is ContentPool {
         for (uint index = 0; index < totalContents; index++) {
             lock(abi.encodePacked(contentIds[index]));
         }
-        emit BatchLocked(batchId);
+        emit BatchLocked(msg.sender, batchId);
     }
 
     /** @dev Unlocks a locked batch of contents. */
@@ -90,7 +90,7 @@ contract ContentPoolV2 is ContentPool {
         for (uint index = 0; index < totalContents; index++) {
             unlock(abi.encodePacked(contentIds[index]));
         }
-        emit BatchUnlocked(batchId);
+        emit BatchUnlocked(msg.sender, batchId);
     }
 
     /** @dev Converts bytes data to a batch identity if it is available. */

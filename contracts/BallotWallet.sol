@@ -66,13 +66,13 @@ contract BallotWallet {
     }
 
     /** @dev Emitted when a voter starts a voting. */
-    event VotingStarted(uint actionId, address starter);
+    event VotingStarted(uint indexed actionId, address indexed starter);
 
     /** @dev Emitted when a voter votes for an action. */
-    event Voted(uint actionId, address voter);
+    event Voted(uint indexed actionId, address indexed voter);
 
     /** @dev Emitted when an action is executed. */
-    event ActionExecuted(uint actionId);
+    event ActionExecuted(uint indexed actionId);
 
     /** @dev Starts a voting to execute an action. */
     function start(

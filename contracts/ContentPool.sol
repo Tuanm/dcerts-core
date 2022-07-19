@@ -14,13 +14,13 @@ struct Content {
 contract ContentPool {
 
     /** @dev Emitted when new content is added. */
-    event ContentAdded(uint indexed id, string cid);
+    event ContentAdded(address indexed author, uint id, string cid);
 
     /** @dev Emitted when a content is locked. */
-    event ContentLocked(uint indexed id);
+    event ContentLocked(address indexed author, uint id);
 
     /** @dev Emitted when a content is unlocked. */
-    event ContentUnlocked(uint indexed id);
+    event ContentUnlocked(address indexed author, uint id);
 
     /** @dev The number of contents added. */
     uint total = 0;
@@ -48,7 +48,7 @@ contract ContentPool {
             cid: cid
         });
         total = id + 1;
-        emit ContentAdded(id, cid);
+        emit ContentAdded(msg.sender, id, cid);
         return id;
     }
 
@@ -58,7 +58,7 @@ contract ContentPool {
         Content storage content = contents[id];
         require(content.author == msg.sender, "No permission");
         content.locked = true;
-        emit ContentLocked(id);
+        emit ContentLocked(msg.sender, id);
     }
 
     /** @dev Unlocks a locked content. */
@@ -67,7 +67,7 @@ contract ContentPool {
         Content storage content = contents[id];
         require(content.author == msg.sender, "No permission");
         content.locked = false;
-        emit ContentUnlocked(id);
+        emit ContentUnlocked(msg.sender, id);
     }
 
     /** @dev Converts bytes data to a content identity if it is available. */
