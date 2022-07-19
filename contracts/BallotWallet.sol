@@ -51,17 +51,20 @@ contract BallotWallet {
         voters = _voters;
     }
 
-    /** @dev Permits only the voters to execute stuff. */
-    modifier onlyVoter() {
+    /** @dev Checks if an address is belong to a voter or not. */
+    function isVoter(address _address) public view returns (bool) {
         uint totalVoters = voters.length;
-        bool canVote = false;
         for (uint index = 0; index < totalVoters; index++) {
-            if (voters[index] == msg.sender) {
-                canVote = true;
-                break;
+            if (voters[index] == _address) {
+                return true;
             }
         }
-        require(canVote, "No permission to vote");
+        return false;
+    }
+
+    /** @dev Permits only the voters to execute stuff. */
+    modifier onlyVoter() {
+        require(isVoter(msg.sender), "No permission to vote");
         _;
     }
 
