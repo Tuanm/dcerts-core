@@ -110,7 +110,7 @@ contract BallotWallet {
     }
 
     /** @dev Votes to or not to execute a specific action. */
-    function vote(uint _actionId) public onlyVoter returns (bool, bytes memory) {
+    function vote(uint _actionId, bool _affirmed) public onlyVoter returns (bool, bytes memory) {
         require(_actionId < total, "Action not found");
         require(voted[_actionId][msg.sender] != true, "Already voted");
         Action storage action = actions[_actionId];
@@ -122,7 +122,7 @@ contract BallotWallet {
         ballots[_actionId].push(Ballot({
             voter: msg.sender,
             voteTime: block.timestamp,
-            affirmed: true
+            affirmed: _affirmed
         }));
         // Mark that the voter has voted
         voted[_actionId][msg.sender] = true;
