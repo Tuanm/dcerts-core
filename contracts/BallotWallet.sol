@@ -14,6 +14,7 @@ struct Action {
     address starter;
     uint startTime;
     uint executionTime;
+    uint cancellationTime;
     bytes data;
     bool executed;
     bool cancelled;
@@ -46,8 +47,11 @@ contract BallotWallet {
     /** @dev Indicates that a voter has voted for an action or not. */
     mapping(uint => mapping(address => bool)) voted;
 
+    /** @dev Receives ethers. */
+    receive() external payable {}
+
     /** @dev Starts a voting to execute an action. */
-    fallback() external {
+    fallback() external payable {
         require(isVoter(msg.sender), "No permission to start a voting");
         uint actionId = total;
         actions[actionId] = Action({
@@ -55,6 +59,7 @@ contract BallotWallet {
             starter: msg.sender,
             startTime: block.timestamp,
             executionTime: 0,
+            cancellationTime: 0,
             data: msg.data,
             executed: false,
             cancelled: false
@@ -150,7 +155,7 @@ contract BallotWallet {
 
         // Only execute the action if there are enough affirmations
         if (totalAffirmations >= threshold) {
-            (bool success, bytes memory result) = execution.call(_action.data);
+            (bool success, bytes memory result) = address(execution).call(_action.data);
             if (success) {
                 _action.executionTime = block.timestamp;
                 _action.executed = true;
@@ -158,6 +163,7 @@ contract BallotWallet {
                 return (success, result);
             }
         } else if (totalBallots - totalAffirmations >= threshold) {
+            _action.cancellationTime = block.timestamp;
             _action.cancelled = true;
             emit ActionCancelled(_action.id);
         }
