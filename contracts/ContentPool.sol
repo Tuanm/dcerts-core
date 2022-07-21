@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 /** @dev Content. */
 struct Content {
     uint id;
+    uint tag;
     uint timestamp;
     address author;
     bool locked;
@@ -14,13 +15,13 @@ struct Content {
 contract ContentPool {
 
     /** @dev Emitted when new content is added. */
-    event ContentAdded(address indexed author, uint indexed id, string indexed cid);
+    event ContentAdded(address indexed author, uint indexed id, uint indexed tag);
 
     /** @dev Emitted when a content is locked. */
-    event ContentLocked(address indexed author, uint indexed id);
+    event ContentLocked(address indexed author, uint indexed id, uint indexed tag);
 
     /** @dev Emitted when a content is unlocked. */
-    event ContentUnlocked(address indexed author, uint indexed id);
+    event ContentUnlocked(address indexed author, uint indexed id, uint indexed tag);
 
     /** @dev The number of contents added. */
     uint total = 0;
@@ -37,46 +38,36 @@ contract ContentPool {
     }
 
     /** @dev Adds new content. */
-    function add(bytes memory _data) public returns (uint) {
+    function add(string memory _cid, uint _tag) public returns (uint) {
         uint id = total;
-        string memory cid = string(_data);
         contents[id] = Content({
             id: id,
+            tag: _tag,
             timestamp: block.timestamp,
             author: msg.sender,
             locked: false,
-            cid: cid
+            cid: _cid
         });
         total = id + 1;
-        emit ContentAdded(msg.sender, id, cid);
+        emit ContentAdded(msg.sender, id, _tag);
         return id;
     }
 
     /** @dev Locks a content. */
-    function lock(bytes memory _data) public {
-        uint id = parseId(_data);
-        Content storage content = contents[id];
+    function lock(uint _id) public {
+        require(_id < total, "Not found");
+        Content storage content = contents[_id];
         require(content.author == msg.sender, "No permission");
         content.locked = true;
-        emit ContentLocked(msg.sender, id);
+        emit ContentLocked(msg.sender, _id, content.tag);
     }
 
     /** @dev Unlocks a locked content. */
-    function unlock(bytes memory _data) public {
-        uint id = parseId(_data);
-        Content storage content = contents[id];
+    function unlock(uint _id) public {
+        require(_id < total, "Not found");
+        Content storage content = contents[_id];
         require(content.author == msg.sender, "No permission");
         content.locked = false;
-        emit ContentUnlocked(msg.sender, id);
-    }
-
-    /** @dev Converts bytes data to a content identity if it is available. */
-    function parseId(bytes memory _data) internal view returns (uint) {
-        uint id;
-        assembly {
-            id := mload(add(_data, 0x20))
-        }
-        require(id < total, "Not found");
-        return id;
+        emit ContentUnlocked(msg.sender, _id, content.tag);
     }
 }
