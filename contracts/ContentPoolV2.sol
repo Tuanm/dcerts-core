@@ -18,13 +18,13 @@ contract ContentPoolV2 is ContentPool {
     mapping(uint => uint[]) batches;
 
     /** @dev Emitted when a batch is added. */
-    event BatchAdded(address indexed author, uint indexed batchId);
+    event BatchAdded(address indexed author, uint indexed batchId, uint indexed contentId);
 
     /** @dev Emitted when a batch is locked. */
-    event BatchLocked(address indexed author, uint indexed batchId);
+    event BatchLocked(address indexed author, uint indexed batchId, uint indexed contentId);
 
     /** @dev Emitted when a batch is unlocked. */
-    event BatchUnlocked(address indexed author, uint indexed batchId);
+    event BatchUnlocked(address indexed author, uint indexed batchId, uint indexed contentId);
 
     /** @dev Retrieves a batch of contents by its identity. */
     function getBatch(uint _batchId) public view returns (Content[] memory) {
@@ -43,10 +43,11 @@ contract ContentPoolV2 is ContentPool {
         uint batchId = totalBatches;
         for (uint index = 0; index < _headers.length; index++) {
             ContentHeader calldata header = _headers[index];
-            add(header.cid, header.tag);
+            uint contentId = add(header.cid, header.tag);
+            batches[batchId].push(contentId);
+            emit BatchAdded(msg.sender, batchId, contentId);
         }
         totalBatches = batchId + 1;
-        emit BatchAdded(msg.sender, batchId);
         return batchId;
     }
 
@@ -56,9 +57,10 @@ contract ContentPoolV2 is ContentPool {
         uint[] memory contentIds = batches[_batchId];
         uint totalContents = contentIds.length;
         for (uint index = 0; index < totalContents; index++) {
-            lock(index);
+            uint contentId = contentIds[index];
+            lock(contentId);
+            emit BatchLocked(msg.sender, _batchId, contentId);
         }
-        emit BatchLocked(msg.sender, _batchId);
     }
 
     /** @dev Unlocks a locked batch of contents. */
@@ -67,8 +69,9 @@ contract ContentPoolV2 is ContentPool {
         uint[] memory contentIds = batches[_batchId];
         uint totalContents = contentIds.length;
         for (uint index = 0; index < totalContents; index++) {
-            unlock(index);
+            uint contentId = contentIds[index];
+            unlock(contentId);
+            emit BatchUnlocked(msg.sender, _batchId, contentId);
         }
-        emit BatchLocked(msg.sender, _batchId);
     }
 }
