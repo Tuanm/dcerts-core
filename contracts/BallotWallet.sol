@@ -11,17 +11,20 @@ struct Ballot {
 /** @dev An action need executing. */
 struct Action {
     uint id;
-    address contractAddress;
     address starter;
     uint startTime;
-    string functionName; // format: <name>(bytes), eg: add(bytes)
-    bytes parameters;
+    uint executionTime;
+    uint cancellationTime;
+    bytes data;
     bool executed;
     bool cancelled;
 }
 
 /** @title A contract for voting-action system. */
 contract BallotWallet {
+
+    /** @dev The address of execution contract. */
+    address execution;
 
     /** @dev Contains all voters. */
     address[] voters;
@@ -44,10 +47,37 @@ contract BallotWallet {
     /** @dev Indicates that a voter has voted for an action or not. */
     mapping(uint => mapping(address => bool)) voted;
 
-    constructor(uint _threshold, uint _timeout, address[] memory _voters) {
+    /** @dev Receives ethers. */
+    receive() external payable {}
+
+    /** @dev Starts a voting to execute an action. */
+    fallback() external payable {
+        require(isVoter(msg.sender), "No permission to start a voting");
+        uint actionId = total;
+        actions[actionId] = Action({
+            id: actionId,
+            starter: msg.sender,
+            startTime: block.timestamp,
+            executionTime: 0,
+            cancellationTime: 0,
+            data: msg.data,
+            executed: false,
+            cancelled: false
+        });
+        emit VotingStarted(actionId, msg.sender);
+        total = actionId + 1;
+    }
+
+    constructor(
+        address _execution,
+        uint _threshold,
+        uint _timeout,
+        address[] memory _voters
+    ) {
         require(_threshold >= 1, "Threshold must be greater than 0");
         require(_timeout >= 300, "Timeout cannot be less than 5 minutes");
         require(_voters.length >= _threshold, "Number of voters cannot be less than its threshold");
+        execution = _execution;
         threshold = _threshold;
         timeout = _timeout;
         voters = _voters;
@@ -88,27 +118,6 @@ contract BallotWallet {
         return actions[_actionId];
     }
 
-    /** @dev Starts a voting to execute an action. */
-    function start(
-        address _contractAddress,
-        string memory _functionName,
-        bytes calldata _parameters
-    ) public onlyVoter {
-        uint actionId = total;
-        actions[actionId] = Action({
-            id: actionId,
-            contractAddress: _contractAddress,
-            starter: msg.sender,
-            startTime: block.timestamp,
-            functionName: _functionName,
-            parameters: _parameters,
-            executed: false,
-            cancelled: false
-        });
-        emit VotingStarted(actionId, msg.sender);
-        total = actionId + 1;
-    }
-
     /** @dev Votes to or not to execute a specific action. */
     function vote(uint _actionId, bool _affirmed) public onlyVoter returns (bool, bytes memory) {
         require(_actionId < total, "Action not found");
@@ -146,15 +155,15 @@ contract BallotWallet {
 
         // Only execute the action if there are enough affirmations
         if (totalAffirmations >= threshold) {
-            (bool success, bytes memory result) = _action.contractAddress.call(
-                abi.encodeWithSignature(_action.functionName, _action.parameters)
-            );
+            (bool success, bytes memory result) = address(execution).call(_action.data);
             if (success) {
+                _action.executionTime = block.timestamp;
                 _action.executed = true;
                 emit ActionExecuted(_action.id);
                 return (success, result);
             }
         } else if (totalBallots - totalAffirmations >= threshold) {
+            _action.cancellationTime = block.timestamp;
             _action.cancelled = true;
             emit ActionCancelled(_action.id);
         }
