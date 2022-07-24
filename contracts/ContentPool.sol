@@ -4,10 +4,10 @@ pragma solidity ^0.8.9;
 /** @dev Content. */
 struct Content {
     uint id;
-    uint tag;
     uint timestamp;
     address author;
     bool locked;
+    string tag;
     string cid;
 }
 
@@ -15,13 +15,13 @@ struct Content {
 contract ContentPool {
 
     /** @dev Emitted when new content is added. */
-    event ContentAdded(address indexed author, uint indexed id, uint indexed tag);
+    event ContentAdded(address indexed author, uint indexed id, string indexed tag);
 
     /** @dev Emitted when a content is locked. */
-    event ContentLocked(address indexed author, uint indexed id, uint indexed tag);
+    event ContentLocked(address indexed author, uint indexed id, string indexed tag);
 
     /** @dev Emitted when a content is unlocked. */
-    event ContentUnlocked(address indexed author, uint indexed id, uint indexed tag);
+    event ContentUnlocked(address indexed author, uint indexed id, string indexed tag);
 
     /** @dev The number of contents added. */
     uint total = 0;
@@ -38,14 +38,14 @@ contract ContentPool {
     }
 
     /** @dev Adds new content. */
-    function add(string memory _cid, uint _tag) public returns (uint) {
+    function add(string memory _cid, string memory _tag) public returns (uint) {
         uint id = total;
         contents[id] = Content({
             id: id,
-            tag: _tag,
             timestamp: block.timestamp,
             author: msg.sender,
             locked: false,
+            tag: _tag,
             cid: _cid
         });
         total = id + 1;

@@ -5,7 +5,7 @@ import "./ContentPool.sol";
 
 struct ContentHeader {
     string cid;
-    uint tag;
+    string tag;
 }
 
 /** @title ContentPool with batching support. */
