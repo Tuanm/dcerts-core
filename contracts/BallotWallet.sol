@@ -156,12 +156,11 @@ contract BallotWallet {
         // Only execute the action if there are enough affirmations
         if (totalAffirmations >= threshold) {
             (bool success, bytes memory result) = address(execution).call(_action.data);
-            if (success) {
-                _action.executionTime = block.timestamp;
-                _action.executed = true;
-                emit ActionExecuted(_action.id);
-                return (success, result);
-            }
+            require(success, "Execution failed");
+            _action.executionTime = block.timestamp;
+            _action.executed = true;
+            emit ActionExecuted(_action.id);
+            return (success, result);
         } else if (totalBallots - totalAffirmations >= threshold) {
             _action.cancellationTime = block.timestamp;
             _action.cancelled = true;
